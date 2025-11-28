@@ -16,16 +16,22 @@
 
 	/** @type {Product[]} */
 	let products = [];
-	/** @type {string[]} */
 	let categories = [];
 	let selectedCategory = 'Todas';
 	let loading = true;
+
+	// 🔔 Estado de la alerta
+	let showSuccess = false;
+	let successText = '';
+	/** @type {ReturnType<typeof setTimeout> | null} */
+	let successTimeout = null;
+	/** @type {string | number | null} */
+	let successProductId = null; // 👈 producto que tiene la alerta
 
 	onMount(async () => {
 		const res = await fetch('http://localhost:4000/api/shop/products');
 		if (res.ok) {
 			products = await res.json();
-			// Extraer categorías únicas
 			categories = ['Todas', ...new Set(products.map((p) => p.categoriaNombre))];
 		}
 		loading = false;
@@ -35,6 +41,24 @@
 		selectedCategory === 'Todas'
 			? products
 			: products.filter((p) => p.categoriaNombre === selectedCategory);
+
+	// ✅ Función para agregar al carrito y mostrar alerta SOLO en esa card
+	function handleAddToCart(product) {
+		addToCart(product);
+
+		successText = `${product.nombre} se agregó al carrito ✅`;
+		successProductId = product.idProducto; // 👈 guardo el id
+		showSuccess = true;
+
+		if (successTimeout) {
+			clearTimeout(successTimeout);
+		}
+
+		successTimeout = setTimeout(() => {
+			showSuccess = false;
+			successProductId = null;
+		}, 1000);
+	}
 </script>
 
 <div class="min-h-screen pt-24 pb-12 px-4 sm:px-8 relative overflow-hidden">
@@ -76,8 +100,34 @@
 			{#each filteredProducts as product}
 				<div
 					transition:fade
-					class="group bg-[#0f172a]/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:border-blue-500/50 hover:shadow-[0_10px_40px_rgba(0,117,255,0.2)] transition-all duration-500 flex flex-col"
+					class="relative group bg-[#0f172a]/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:border-blue-500/50 hover:shadow-[0_10px_40px_rgba(0,117,255,0.2)] transition-all duration-500 flex flex-col"
 				>
+					{#if showSuccess && successProductId === product.idProducto}
+						<div class="absolute -top-6 left-0 right-0 z-20 flex justify-center" transition:fade>
+							<div
+								class="bg-emerald-500/95 text-white px-4 py-3 rounded-2xl shadow-lg shadow-emerald-500/40 flex items-center gap-3 text-sm w-full"
+							>
+								<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M5 13l4 4L19 7"
+									/>
+								</svg>
+
+								<span class="font-medium">{successText}</span>
+
+								<button
+									class="ml-2 text-white/70 hover:text-white text-lg leading-none"
+									on:click={() => (showSuccess = false)}
+								>
+									×
+								</button>
+							</div>
+						</div>
+					{/if}
+
 					<div class="relative h-48 w-full rounded-xl overflow-hidden bg-black/50 mb-4">
 						<img
 							src={product.imagen}
@@ -102,17 +152,17 @@
 						<span class="text-2xl font-bold text-white">S/.{Number(product.precio).toFixed(2)}</span
 						>
 						<button
-							on:click={() => addToCart(product)}
+							on:click={() => handleAddToCart(product)}
 							class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase transition-all shadow-lg shadow-blue-500/30 flex items-center gap-2 active:scale-95"
 						>
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-								><path
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									stroke-width="2"
 									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-								></path></svg
-							>
+								></path>
+							</svg>
 							Agregar
 						</button>
 					</div>

@@ -1,6 +1,7 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { setCartUser } from '$lib/cart'; // 👈 NUEVO: conectar login con carrito
 
 	let email = '';
 	let password = '';
@@ -13,7 +14,24 @@
 
 	onMount(() => {
 		const token = localStorage.getItem('token');
+		const rawUser = localStorage.getItem('usuario');
+
+		// 🔹 Sincronizar carrito con el usuario que ya está guardado (si lo hay)
+		if (rawUser) {
+			try {
+				const user = JSON.parse(rawUser);
+				// Cambia "user.id" si tu backend usa otro nombre para el ID
+				setCartUser(user.id);
+			} catch (e) {
+				console.error('Error parsing usuario from localStorage', e);
+				setCartUser(null); // guest
+			}
+		} else {
+			setCartUser(null); // guest / sin sesión
+		}
+
 		if (token) {
+			// Si quisieras redirigir automáticamente a la tienda, descomenta:
 			// goto('/tienda');
 		}
 	});
@@ -49,8 +67,6 @@
 		}
 
 		// Regex estricto para validar estructura de correo
-		// Permite letras, números, puntos, guiones y subguiones antes del @
-		// Requiere @ y un dominio con al menos un punto.
 		const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 		if (!emailRegex.test(email)) {
@@ -123,6 +139,9 @@
 				localStorage.setItem('token', data.token);
 				localStorage.setItem('usuario', JSON.stringify(data.user));
 
+			
+				setCartUser(data.user.id);
+
 				if (data.user.rol === 'admin') {
 					window.location.href = '/admin/dashboard';
 				} else {
@@ -139,6 +158,7 @@
 		}
 	}
 </script>
+
 
 <div class="flex items-center justify-center min-h-screen w-full px-4">
 	<div
