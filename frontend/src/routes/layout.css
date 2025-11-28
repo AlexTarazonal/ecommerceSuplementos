@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+
+@theme {
+    /* --- Colores Personalizados (Vision UI) --- */
+
+    /* Color de fondo principal (azul muy oscuro) */
+    --color-vision-dark: #0f172a;
+
+    /* Color de las tarjetas (semi-transparente para el efecto cristal) */
+    --color-vision-card: rgba(22, 27, 51, 0.7);
+
+    /* Azul eléctrico principal (botones, acentos) */
+    --color-vision-primary: #0075ff;
+
+    /* Color secundario (textos suaves, bordes) */
+    --color-vision-secondary: #2d3748;
+
+    /* --- Degradados --- */
+    /* Este creará la clase: bg-body-gradient */
+    --image-body-gradient: linear-gradient(120deg, #0f172a 0%, #080b1e 100%);
+}
+
+/* Estilos globales opcionales para asegurar el fondo oscuro siempre */
+body {
+    background-color: var(--color-vision-dark);
+    color: white;
+}
